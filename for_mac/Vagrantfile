@@ -1,0 +1,43 @@
+# Base Image
+BOX_IMAGE = "bento/ubuntu-20.04-arm64"
+# BOX_VERSION = "20220423.0.0"
+
+
+# Max number of worker nodes: Ex) N = 3
+N = 2
+
+# Version: Ex) k8s_V = '1.22.7'
+k8s_V = '1.27.0'
+cni_N = 'calico'
+
+Vagrant.configure("2") do |config|
+  #-----Manager Node
+  config.vm.define "k8s-m" do |subconfig|
+    subconfig.vm.box = BOX_IMAGE
+    # subconfig.vm.box_version = BOX_VERSION
+    subconfig.vm.provider "vmware_desktop" do |v|
+      v.memory = 2048
+      v.cpus = 2
+    end
+    subconfig.vm.hostname = "k8s-m"
+    subconfig.vm.network "private_network", ip: "192.168.10.10"
+    subconfig.vm.provision "shell", path: "https://raw.githubusercontent.com/dpcalfola/kubernetes_vagrant_config/main/init_arm64_cfg.sh", args: [ N, k8s_V ]
+    subconfig.vm.provision "shell", path: "https://raw.githubusercontent.com/dpcalfola/kubernetes_vagrant_config/main/master.sh", args: [ cni_N ]
+  end
+
+  #-----Worker Node Subnet1
+  (1..N).each do |i|
+    config.vm.define "k8s-w#{i}" do |subconfig|
+      subconfig.vm.box = BOX_IMAGE
+      # subconfig.vm.box_version = BOX_VERSION
+      subconfig.vm.provider "vmware_desktop" do |v|
+        v.memory = 1536
+        v.cpus = 2
+      end
+      subconfig.vm.hostname = "k8s-w#{i}"
+      subconfig.vm.network "private_network", ip: "192.168.10.10#{i}"
+      subconfig.vm.provision "shell", path: "https://raw.githubusercontent.com/dpcalfola/kubernetes_vagrant_config/main/init_arm64_cfg.sh", args: [ N, k8s_V ]
+      subconfig.vm.provision "shell", path: "https://raw.githubusercontent.com/dpcalfola/kubernetes_vagrant_config/main/worker.sh"
+    end
+  end
+end
