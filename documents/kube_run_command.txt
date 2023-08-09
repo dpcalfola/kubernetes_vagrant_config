@@ -1,0 +1,32 @@
+k run myweb --image nginx
+
+
+# Remove kubernetes pods
+kubectl delete pod myweb
+
+
+# Create yaml file
+kubectl run myweb --image nginx --dry-run=client -o yaml > myweb.yaml
+
+
+
+# Delete all pods
+kubectl delete pods --all
+
+
+
+
+# kubectl apply -f myweb.yaml
+# get information about pods
+kubectl get pods 
+
+
+
+# run httpd pod
+kubectl run httpd --image httpd --port 10080 --expose --dry-run=client -o yaml > httpd.yaml
+kubectl apply -f httpd.yaml
+
+
+# run alpine pod
+kubectl run alpine --image alpine --restart=Never --dry-run=client -o yaml > alpine.yaml
+kubectl apply -f alpine.yaml

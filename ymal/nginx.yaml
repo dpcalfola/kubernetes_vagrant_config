@@ -1,0 +1,12 @@
+# cat > myweb.yaml
+apiVersion: v1
+kind: Pod
+metadata:
+  name: myweb
+spec:
+  containers:
+    - image: ubuntu/nginx
+      name: myweb-container
+      ports:
+        - containerPort: 80
+          protocol: TCP

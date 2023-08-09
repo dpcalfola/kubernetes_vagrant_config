@@ -1,0 +1,59 @@
+kubectl cluster-info
+
+kubectl get namespace
+
+kubectl get pod -n kube-system
+
+cat /root/.kube/config
+
+k get pod -v9
+
+k get pod -o wide
+
+
+
+
+
+* 네임스페이스 이동
+    - 현재 위치 ?
+
+* kubens tool
+kubens
+
+kubens kube-system
+    - move namespace to kube-system
+
+kubens -
+    - move namespace to default
+
+
+
+
+
+
+* kube-ps1
+
+kubeoff
+kubeon
+
+
+
+
+* kubectl
+k get nodes -o wide
+
+k describe nodes k8s-w1
+
+k get pod
+k get pod -A
+
+
+* containerd
+
+containerd
+
+
+
+* ps afx
+
+ps afx | grep /user/bin/containerd
