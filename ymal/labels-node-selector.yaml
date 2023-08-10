@@ -1,0 +1,15 @@
+#labels-node-selector.yaml
+
+apiVersion: v1
+kind: Pod
+metadata:
+  name: node-labels
+spec:
+  containers:
+    - name: node-labels
+      image: nginx
+      ports:
+        - containerPort: 80
+          protocol: TCP
+  nodeSelector:
+    cloud: fola

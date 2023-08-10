@@ -1,0 +1,17 @@
+#hostpath.yaml
+apiVersion: v1
+kind: Pod
+metadata:
+  name: hostpath
+spec:
+  containers:
+    - name: hostpath
+      image: busybox
+      args: [ "tail", "-f", "/dev/null" ]
+      volumeMounts:
+        - name: hostpath-volume
+          mountPath: /etc/data
+  volumes:
+    - name: hostpath-volume
+      hostPath:
+        path: /cloud

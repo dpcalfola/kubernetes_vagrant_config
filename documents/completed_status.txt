@@ -1,0 +1,2 @@
+# show completed pod log
+kubectl logs -f <pod-name>

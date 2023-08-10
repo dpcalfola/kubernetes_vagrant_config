@@ -1,0 +1,4 @@
+kubectl get event --sort-by=.metadata.creationTimestamp -w
+
+# rm index.html on nginx pod
+kubectl exec -it rm -f

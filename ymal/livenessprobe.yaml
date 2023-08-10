@@ -1,0 +1,25 @@
+# livenessprobe.yaml
+apiVersion: v1
+kind: Pod
+metadata:
+  name: livenessprobe
+spec:
+  containers:
+    - name: livenessprobe
+      image: nginx
+      livenessProbe:
+        httpGet:
+          port: 80
+          path: /index.html
+        # initialDelaySeconds: 15
+        # timeoutSeconds: 2
+        # periodSeconds: 5
+        # failureThreshold: 1
+
+
+
+# k logs livenessprobe -f
+# k describe pod livenessprobe
+
+
+# k exec livenessprobe -- rm /usr/share/nginx/html/index.html && k logs livenessprobe -f

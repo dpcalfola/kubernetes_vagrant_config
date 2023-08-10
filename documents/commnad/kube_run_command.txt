@@ -30,3 +30,20 @@ kubectl apply -f httpd.yaml
 # run alpine pod
 kubectl run alpine --image alpine --restart=Never --dry-run=client -o yaml > alpine.yaml
 kubectl apply -f alpine.yaml
+
+
+
+
+
+#
+kubectl api-resources
+kubectl explain pod
+
+
+
+kubectl run t1 --image nginx --dry-run=client -o yaml > t1.yaml
+
+
+
+
+root@k8s-m:~# k exec -it myweb2 -c myweb2-netshoot -- zsh

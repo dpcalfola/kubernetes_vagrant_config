@@ -1,0 +1,16 @@
+copy/paste in terminal
+    copy: ctrl + insert
+    paste: shift + insert
+
+
+
+
+
+
+
+
+
+anne pro config
+{
+    insert: fn1 + i
+}

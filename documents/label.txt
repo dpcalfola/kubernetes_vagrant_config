@@ -1,0 +1,27 @@
+* command
+kebectl get pod --show-labels
+kubectl get nodes --show-labels
+
+
+* label selector
+
+kubectl get pods -l app=nginx
+
+kubectl get pods -l environment=production
+kubectl get pods -l environment=dev
+
+kubectl get pods -l 'environment in (production, qa)'
+
+
+
+# Delete label
+kubectl label pod myweb2 app-
+
+
+# Add label
+kubectl label nodes k8s-w1 cloud=fola
+
+
+
+# yaml 파일을 변경하지 않고 내용을 변경하여 파드 생성
+cat labels-node.yaml | sed "s/name: node-labels/name: node-labels-2/g" | kubectl apply -f -

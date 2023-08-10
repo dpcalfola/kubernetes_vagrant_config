@@ -1,0 +1,16 @@
+#com.yaml
+
+apiVersion: v1
+kind: Pod
+metadata:
+  name: cmd-args
+spec:
+  restartPolicy: OnFailure
+  containers:
+    - name: cmd-args-nginx
+      image: nginx
+      ports:
+        - containerPort: 80
+          protocol: TCP
+      command: [ "/bin/echo" ]
+      args: [ "hello" ]

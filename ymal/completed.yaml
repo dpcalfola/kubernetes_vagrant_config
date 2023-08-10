@@ -1,0 +1,20 @@
+#completed.yaml
+apiVersion: v1
+kind: Pod
+metadata:
+  name: completed-pod
+spec:
+  containers:
+    - name: completed-pod
+      image: busybox
+      command: [ "sh" ]
+      args: [ "-c", "sleep 5 && exit 0" ]
+
+
+# complete_status# k apply -f completed.yaml && k get pod -w
+
+# 실행중인 pod 의 실제로 적용된 yaml 을 출력한다
+# kubectl get pod completed-pod -o yaml | grep restartPolicy
+# kubectl get pod completed-pod -o yaml
+
+# restartPolicy: Always 가 default

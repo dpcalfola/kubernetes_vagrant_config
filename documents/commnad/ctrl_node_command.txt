@@ -57,3 +57,22 @@ containerd
 * ps afx
 
 ps afx | grep /user/bin/containerd
+
+
+
+# watch
+watch -d 'kubectl get pod'
+
+
+
+# cat 을 통한 파일 생성
+cat > test.txt
+<내용 삽입>
+<ctrl + d>
+
+
+
+
+# logs
+kubectl logs -f <pod name> -c <container name>
+kubectl logs -f
