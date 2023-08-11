@@ -1,0 +1,16 @@
+* job
+
+kubectl logs jobs/pi
+
+k get jobs.batch/pi -o
+
+k describe pod pi-2x66b
+
+
+# if pod would delete, cause of jab has been completed already, so pod will be not recreated
+# if delete job, pod will be deleted too
+
+
+
+
+

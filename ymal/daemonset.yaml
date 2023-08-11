@@ -1,0 +1,17 @@
+# daemonset.yaml
+apiVersion: apps/v1
+kind: DaemonSet
+metadata:
+  name: daemonset-1
+spec:
+  selector:
+    matchLabels:
+      name: daemonset-cloud
+  template:
+    metadata:
+      labels:
+        name: daemonset-cloud
+    spec:
+      containers:
+        - name: daemonset-pod
+          image: nginx

@@ -1,0 +1,25 @@
+# pod-rs.yaml
+apiVersion: v1
+kind: Pod
+metadata:
+  name: pod1
+  labels:
+    app: cloud-nginx-pods
+spec:
+  containers:
+    - name: hello1
+      image: gcr.io/google-samples/hello-app:1.0
+---
+apiVersion: v1
+kind: Pod
+metadata:
+  name: pod2
+  labels:
+    app: cloud-nginx-pods
+spec:
+  containers:
+    - name: hello2
+      image: gcr.io/google-samples/hello-app:2.0
+
+
+# k apply -f pod-rs.yaml && get pod -w

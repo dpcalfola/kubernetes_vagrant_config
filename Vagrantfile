@@ -3,7 +3,7 @@ BOX_IMAGE = "ubuntu/jammy64"
 BOX_VERSION = "20220423.0.0"
 
 # max number of worker nodes : Ex) N = 3
-N = 2
+N = 3
 
 # Version : Ex) k8s_V = '1.22.7'
 k8s_V = '1.27.0'

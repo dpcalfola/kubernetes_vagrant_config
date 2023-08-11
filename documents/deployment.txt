@@ -1,0 +1,46 @@
+* sample yaml file:
+    /yaml/deployment.yaml
+* deployment name:
+    deployment-cloud
+
+
+# monitor pods, rs, deployment
+    watch -d 'kubectl get pods,rs,deployment -o wide'
+
+
+# get info about deployment
+    k get deployment -o wide
+
+# scale deployment
+    k scale deployment deployment-cloud --replicas=6
+
+
+# delete replicaset
+    k delete replicaset.apps <deployment-name>-<hash>
+    k delete replicaset.apps deployment-cloud-5fc5956697
+
+    -> This will delete the pod and create a new one with a new hash
+    -> Because the deployment is still there and it will create a new replicaset with a new pod
+
+
+
+
+
+Case 1 - update
+k apply -f deployment-1.yaml --record
+
+k get pod -o yaml | grep "image: nginx"
+
+k rollout history deployment deployment-cloud
+
+
+
+
+#
+while true; do kubectl rollout status deployment deployment-cloud && echo "--------------" && date; sleep 1; done
+
+#
+k rollout history deployment deployment-cloud
+
+#
+k rollout undo deployment deployment-cloud --to-revision=2

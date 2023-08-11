@@ -1,0 +1,23 @@
+# replicaset.yaml
+apiVersion: apps/v1
+kind: ReplicaSet
+metadata:
+  name: replicaset-cloud
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: cloud-nginx-pods
+  template:
+    metadata:
+      name: cloud-nginx-pod
+      labels:
+        app: cloud-nginx-pods
+    spec:
+      containers:
+        - name: nginx
+          image: nginx:latest
+
+# watch -d 'kubectl get pods, rs, -o wide'
+# kubectl get describe rs ?
+# k get pod --show-labels

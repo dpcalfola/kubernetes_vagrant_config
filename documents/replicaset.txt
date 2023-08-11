@@ -1,0 +1,46 @@
+* sample yaml: /yaml/replicaset.yaml
+
+# monitor pod and replicaset
+watch -d 'kubectl get pods, rs, -o wide'
+watch -d 'kubectl get pods, rs -o wide'
+
+
+# get object
+kubectl get replicaset.apps replicaset-cloud -o yaml
+
+# describe
+kubectl describe replicaset.apps replicaset-cloud
+
+
+# show labels
+k get pod --show-labels
+
+
+# ectd 에 직접 접근하여 수정할 수 있음
+k edit replicaset replicaset-cloud
+
+
+# Delete the label from the pod
+k delete rs replicaset-cloud
+
+
+
+Case 1
+# delete replicaset object
+k delete replicaset replicaset-cloud
+
+-> 리플리카셋 오브젝트를 삭제하면 그 오브젝트로 인해 생성된 모든 파드 또한 삭제됨
+
+
+Case 2
+# 파드를 수동삭제할 경우 리플리카셋은 파드를 다시 생성함
+
+
+
+Case 3
+# 레플리카셋으로 부터 관리하고 있는 파드에 레이블을 삭제한다면
+# 레플리카셋에게 관리받지 않는 파드가 1개 남게되고
+# 레플리카셋이 파드를 1개 더 생성하여 desired 를 맞추게 됨
+
+
+
