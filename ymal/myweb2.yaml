@@ -15,4 +15,4 @@ spec:
     - name: myweb2-netshoot
       image: nicolaka/netshoot
       command: ["/bin/bash"]
-      args: ["-c", "while t rue; do sleep 5; curmyl localhost; done"]
+      args: ["-c", "while t rue; do sleep 5; curl localhost; done"]
