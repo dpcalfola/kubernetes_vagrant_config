@@ -1,0 +1,13 @@
+# svc-clusterip.yaml
+apiVersion: v1
+kind: Service
+metadata:
+  name: svc-clusterip
+spec:
+  ports:
+    - name: svc-webport
+      port: 9000
+      targetPort: 80
+  selector:
+    app: service-nginx-pod
+  type: ClusterIP

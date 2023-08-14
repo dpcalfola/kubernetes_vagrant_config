@@ -1,0 +1,20 @@
+# nginx v1.11 의 index.html 내용 변경
+for pod in $(kubectl get pod -l app=deploy-nginx11 |awk 'NR>1 {print $1}'); do kubectl exec $pod -- /bin/sh -c "hostname > /usr/share/nginx/html/index.html; echo 'nginx:v1.11 END' >> /usr/share/nginx/html/index.html"; done
+
+
+# nginx v1.11 의 index.html 내용 변경
+for pod in $(kubectl get pod -l app=deploy-nginx12 |awk 'NR>1 {print $1}'); do kubectl exec $pod -- /bin/sh -c "hostname > /usr/share/nginx/html/index.html; echo 'nginx:v1.12 END' >> /usr/share/nginx/html/index.html"; done
+
+
+
+# Pod 로그 실시간 확인
+kubectl logs -l 'app in (deploy-nginx11,deploy-nginx12)' -f --max-log-requests 8
+
+
+# 업데이트 실행
+kubectl get svc svc-nginx -o yaml | sed -e "s/app: deploy-nginx11/app: deploy-nginx12/" | kubectl apply -f -
+# 업데이트 롤백
+kubectl get svc svc-nginx -o yaml | sed -e "s/app: deploy-nginx12/app: deploy-nginx11/" | kubectl apply -f -
+
+# 지난 버전 파드 삭제 실무 팁
+kubectl scale deploy deploy-nginx11 --replicas=0

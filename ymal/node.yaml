@@ -1,0 +1,12 @@
+# node.yaml
+apiVersion: v1
+kind: Pod
+metadata:
+  name: netshoot-pod
+spec:
+  nodeName: k8s-m
+  containers:
+    - name: netshoot-pod
+      image: nicolaka/netshoot
+      command: ["tail"]
+      args: ["-f", "/dev/null"]

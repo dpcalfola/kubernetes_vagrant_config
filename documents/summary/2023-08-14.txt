@@ -1,0 +1,9 @@
+1. Service
+    1.1 ClusterIP
+    1.2 NodePort
+    1.3 LoadBalancer
+        (only cloud provider)
+
+2. blue-green update
+
+3. coreDNS

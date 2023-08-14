@@ -1,0 +1,45 @@
+# Pod 로그 실시간 확인
+kubectl logs -l 'app in (deploy-nginx11,deploy-nginx12)' -f --max-log-requests 8
+
+
+for i in {1..100}; do curl -s $SVC:9000 ; done | sort | uniq -c | sort -nr
+while true; do curl -s --connect-timeout 1 $SVC:9000 ; echo "--------------" ; date "+%Y-%m-%d %H:%M:%S" ; sleep 1; done
+
+
+for i in {1..30}; do curl -s $SVC:9000 ; done | sort | uniq -c | sort -nr
+
+
+for i in {1..100}; do curl -s $192.168.10.10:30000 ; done | sort | uniq -c | sort -nr
+
+
+
+
+tcpdump -i enp0s8 -nn
+
+15:24:29.739568 IP 192.168.10.10.24626 > 172.30.197.15.80: Flags [.], ack 1, win 1024, length 0
+15:24:29.739605 IP 192.168.10.10.4726 > 172.30.197.15.80: Flags [.], ack 1, win 1024, length 0
+15:24:29.739643 IP 192.168.10.10.24626 > 172.30.197.15.80: Flags [P.], seq 1:562, ack 1, win 1024, length 561: HTTP: GET / HTTP/1.1
+15:24:29.740314 IP 172.30.197.15.80 > 192.168.10.10.24626: Flags [.], ack 562, win 503, length 0
+15:24:29.740352 IP 192.168.10.10.30000 > 192.168.10.1.52415: Flags [.], ack 562, win 503, length 0
+15:24:29.740634 IP 172.30.197.15.80 > 192.168.10.10.24626: Flags [P.], seq 1:238, ack 562, win 503, length 237: HTTP: HTTP/1.1 200 OK
+
+
+
+
+(w1)
+conntrack -L -n
+
+
+
+
+(m)
+k get svc svc-nodeport -o yaml
+
+    externalTrafficPolicy: Cluster
+    internalTrafficPolicy: Cluster
+
+# 정책 변경
+kubectl get svc svc-nodeport -o yaml | sed -e "s/externalTrafficPolicy: Cluster/externalTrafficPolicy: Local/" | kubectl apply -f -
+
+
+

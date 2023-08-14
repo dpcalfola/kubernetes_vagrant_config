@@ -1,0 +1,163 @@
+
+# pod IP 만 출력
+    kubectl get pod -o wide -l app=service-nginx-pod |awk 'NR>1 {print $6}'
+
+
+# Pod Name만 출력
+    kubectl get pod -l app=service-nginx-pod -o=name
+
+
+# Pod IP마다 curl 접속 : 출력 정보 확인
+    # 80 port
+    for pod in $(kubectl get pod -o wide -l app=service-nginx-pod |awk 'NR>1 {print $6}'); do curl -s $pod:80; done
+    # 8080 port
+    for pod in $(kubectl get pod -o wide -l app=service-nginx-pod |awk 'NR>1 {print $6}'); do curl -s $pod:8080; done
+
+
+# Pod 로그 실시간 확인 : 출력 정보 확인
+    kubectl logs -l app=service-nginx-pod -f
+
+
+< node.yaml: ctrl plane 에 pod 생성함 >
+# 파드 접근
+    root@k8s-m:~/2023-08-14# k exec -it netshoot-pod -- zsh
+
+# netshoot-pod에서 service-nginx-pod로 접근
+    curl 172.30.46.62
+
+#
+k get service -o wide svc-clusterip
+
+
+# 반복 테스트
+
+
+
+
+
+
+# sessionAffinity: ClientIP 설정 변경
+kubectl get svc svc-clusterip -o yaml | sed -e "s/sessionAffinity: None/sessionAffinity: ClientIP/" | kubectl apply -f -
+
+
+
+
+
+#
+k delete pods,deploy,service --all
+-> 쿠버네티스에서 디폴트로 잡혀있는 svc, endpoint 가 삭제 되었다가 새로 생성된다
+
+
+
+< service object 동작 내용 확인 >
+
+
+(work-node)
+# PID 확인
+    ps -ef | grep server.js
+    PID 가 출력됨. (parent process, child process ??)
+
+# lsns -> 시스템에 존재하고 있는 네트워크 네임스페이스 조회
+    lsns -t net
+    출력내용중 ps -ef 의 결과값과 가장 유사한 PID 를 가지고 있는 NSFS 확인
+    NSFS(Namespace File System)
+
+    - 결과
+        /run/netns/cni-67dcecc1-44fe-3b3e-fd8d-24e705e38c9c /pause
+
+# 네트워크 인터페이스 세부정보 표시
+    ip -c link
+
+    - 결과
+    14: cali9a66398afc9@if3: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1450 qdisc noqueue state UP mode DEFAULT group default qlen 1000
+        link/ether ee:ee:ee:ee:ee:ee brd ff:ff:ff:ff:ff:ff link-netns cni-67dcecc1-44fe-3b3e-fd8d-24e705e38c9c
+
+#
+tcpdump -i <interface> -nn
+tcpdump -i cali9a66398afc9 -nn
+
+    - 결과
+    12:41:33.389624 IP 192.168.10.10.49639 > 172.30.228.105.8080: Flags [.], ack 182, win 501, options [nop,nop,TS val 1545325814 ecr 1151242422], length 0
+    12:41:33.389673 IP 172.30.228.105.8080 > 192.168.10.10.49639: Flags [P.], seq 182:225, ack 84, win 502, options [nop,nop,TS val 1151242423 ecr 1545325814], length 43: HTTP
+    12:41:33.390279 IP 192.168.10.10.49639 > 172.30.228.105.8080: Flags [.], ack 225, win 501, options [nop,nop,TS val 1545325815 ecr 1151242423], length 0
+    12:41:33.391243 IP 172.30.228.105.8080 > 192.168.10.10.49639: Flags [P.], seq 225:242, ack 84, win 502, options [nop,nop,TS val 1151242424 ecr 1545325815], length 17: HTTP
+    12:41:33.392206 IP 192.168.10.10.49639 > 172.30.228.105.8080: Flags [.], ack 242, win 501, options [nop,nop,TS val 1545325817 ecr 1151242424], length 0
+    12:41:33.393030 IP 192.168.10.10.49639 > 172.30.228.105.8080: Flags [F.], seq 84, ack 242, win 501, options [nop,nop,TS val 1545325817 ecr 1151242424], length 0
+    12:41:33.393315 IP 172.30.228.105.8080 > 192.168.10.10.49639: Flags [F.], seq 242, ack 85, win 502, options [nop,nop,TS val 1151242426 ecr 1545325817], length 0
+    12:41:33.393957 IP 192.168.10.10.49639 > 172.30.228.105.8080: Flags [.], ack 243, win 501, options [nop,nop,TS val 1545325819 ecr 1151242426], length 0
+    12:41:33.401929 IP 192.168.10.10.31804 > 172.30.228.105.8080: Flags [S], seq 2528322885, win 64240, options [mss 1460,sackOK,TS val 1545325826 ecr 0,nop,wscale 7], length 0
+    12:41:33.402041 IP 172.30.228.105.8080 > 192.168.10.10.31804: Flags [S.], seq 2738788839, ack 2528322886, win 64308, options [mss 1410,sackOK,TS val 1151242435 ecr 1545325826,nop,wscale 7], length 0
+    12:41:33.403162 IP 192.168.10.10.31804 > 172.30.228.105.8080: Flags [.], ack 1, win 502, options [nop,nop,TS val 1545325828 ecr 1151242435], length 0
+    12:41:33.404628 IP 192.168.10.10.31804 > 172.30.228.105.8080: Flags [P.], seq 1:84, ack 1, win 502, options [nop,nop,TS val 1545325829 ecr 1151242435], length 83: HTTP: GET / HTTP/1.1
+    12:41:33.404830 IP 172.30.228.105.8080 > 192.168.10.10.31804: Flags [.], ack 84, win 502, options [nop,nop,TS val 1151242438 ecr 1545325829], length 0
+    12:41:33.406071 IP 172.30.228.105.8080 > 192.168.10.10.31804: Flags [P.], seq 1:182, ack 84, win 502, options [nop,nop,TS val 1151242439 ecr 1545325829], length 181: HTTP: HTTP/1.1 200 OK
+
+
+
+    12:41:35.846791 IP 192.168.10.10.15443 > 172.30.228.105.8080: Flags [.], ack 182, win 501, options [nop,nop,TS val 1545328271 ecr 1151244879], length 0
+    12:41:35.846855 IP 172.30.228.105.8080 > 192.168.10.10.15443: Flags [P.], seq 182:242, ack 84, win 502, options [nop,nop,TS val 1151244880 ecr 1545328271], length 60: HTTP
+    12:41:35.847638 IP 192.168.10.10.15443 > 172.30.228.105.8080: Flags [.], ack 242, win 501, options [nop,nop,TS val 1545328272 ecr 1151244880], length 0
+    12:41:35.852829 IP 192.168.10.10.15443 > 172.30.228.105.8080: Flags [F.], seq 84, ack 242, win 501, options [nop,nop,TS val 1545328277 ecr 1151244880], length 0
+    12:41:35.853056 IP 172.30.228.105.8080 > 192.168.10.10.15443: Flags [F.], seq 242, ack 85, win 502, options [nop,nop,TS val 1151244886 ecr 1545328277], length 0
+    12:41:35.854541 IP 192.168.10.10.15443 > 172.30.228.105.8080: Flags [.], ack 243, win 501, options [nop,nop,TS val 1545328279 ecr 1151244886], length 0
+    12:41:38.389237 ARP, Request who-has 172.30.228.105 tell 10.0.2.15, length 28
+    12:41:38.389379 ARP, Reply 172.30.228.105 is-at 72:9a:bb:80:f5:fa, length 28
+
+
+
+
+    로그의 테스트
+    root@k8s-m:~/2023-08-14# for i in {1..100}; do curl -s $SVC:9000 ; done | sort | uniq -c | sort -nr
+
+    192.168.10.10 -> vagrant - control plane private network ip
+    172.30.228.105 -> pod ip
+    (172.30.0.0/16 -> pod network cidr)
+
+
+    # Flags
+    [S] : SYN
+    [.] : ACK
+    [P] : PUSH
+
+
+
+    # Chat GPT analysis
+    The output you've provided is the result of running the tcpdump command on the network interface cali9a66398afc9. It's showing the captured network traffic in a human-readable format. Each line represents a network packet with various details about the source and destination addresses, flags, sequence numbers, and more. Let's break down a few key parts of the output:
+
+    12:41:33.387249: This timestamp indicates the time when the packet was captured.
+
+    IP 192.168.10.10.49639 > 172.30.228.105.8080: This line shows the source and destination IP addresses along with their corresponding port numbers.
+
+    Flags [S]: This indicates the TCP flags set in the packet. [S] means the packet has the SYN flag set, indicating the start of a TCP connection establishment.
+
+    seq 3782637092: This is the sequence number of the TCP packet.
+
+    win 64240: This indicates the window size in the TCP header.
+
+    HTTP: GET / HTTP/1.1: This part indicates that the packet contains an HTTP GET request for the root path ("/") using HTTP version 1.1.
+
+    Flags [P.]: [P.] indicates that this packet has the PSH (Push) flag set, indicating the receiver should deliver the data immediately to the application.
+
+    ack 182: This is the acknowledgment number of the TCP packet.
+
+    HTTP: HTTP/1.1 200 OK: This indicates an HTTP response with a status code 200 (OK), confirming a successful request.
+
+    Flags [F.]: [F.] indicates that this packet has the FIN (Finish) flag set, indicating the end of a TCP connection.
+
+    The output represents a sequence of captured network packets, likely between an HTTP client (source IP) and an HTTP server (destination IP) on ports 49639 and 8080, respectively. The packets show the TCP handshake, HTTP requests, and HTTP responses, as well as the termination of the TCP connection. This is a typical example of the kind of information you can gather using a packet capture tool like tcpdump.
+
+
+
+
+    root@k8s-w1:~# iptables -t nat -S | grep 'dport 9000'
+    -A KUBE-SERVICES -d 10.105.101.161/32 -p tcp -m comment --comment "default/svc-clusterip:svc-webport cluster IP" -m tcp --dport 9000 -j KUBE-SVC-KBDEBIL6IU6WL7RF
+    -A KUBE-SVC-KBDEBIL6IU6WL7RF ! -s 172.30.0.0/16 -d 10.105.101.161/32 -p tcp -m comment --comment "default/svc-clusterip:svc-webport cluster IP" -m tcp --dport 9000 -j KUBE-MARK-MASQ
+    root@k8s-w1:~# iptables -t nat -S | grep 'KUBE-SVC-KBDEBIL6IU6WL7RF'
+    -N KUBE-SVC-KBDEBIL6IU6WL7RF
+    -A KUBE-SERVICES -d 10.105.101.161/32 -p tcp -m comment --comment "default/svc-clusterip:svc-webport cluster IP" -m tcp --dport 9000 -j KUBE-SVC-KBDEBIL6IU6WL7RF
+    -A KUBE-SVC-KBDEBIL6IU6WL7RF ! -s 172.30.0.0/16 -d 10.105.101.161/32 -p tcp -m comment --comment "default/svc-clusterip:svc-webport cluster IP" -m tcp --dport 9000 -j KUBE-MARK-MASQ
+    -A KUBE-SVC-KBDEBIL6IU6WL7RF -m comment --comment "default/svc-clusterip:svc-webport -> 172.30.197.11:8080" -m statistic --mode random --probability 0.33333333349 -j KUBE-SEP-XTSYQI2LIC7H53VL
+    -A KUBE-SVC-KBDEBIL6IU6WL7RF -m comment --comment "default/svc-clusterip:svc-webport -> 172.30.228.105:8080" -m statistic --mode random --probability 0.50000000000 -j KUBE-SEP-PXCYFBF2QD4725K2
+    -A KUBE-SVC-KBDEBIL6IU6WL7RF -m comment --comment "default/svc-clusterip:svc-webport -> 172.30.46.2:8080" -j KUBE-SEP-52LKVIDYOYIPFOGT
+    root@k8s-w1:~#
+

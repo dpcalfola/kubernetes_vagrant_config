@@ -1,0 +1,51 @@
+watch -d 'kubectl get pod,svc,ep -n kube-system -l k8s-app=kube-dns -o wide'
+
+-> coredns 는 work 에 존재할 가능성
+
+
+
+ k describe configmaps -n kube-system coredns
+
+
+
+k get pod -n kube-system -l k8s-app=kube-dns
+
+# coredns 를 1개로 줄임 (실습의 용이성을 위해서)
+k scale deployment -n kube-system coredns --replicas=1
+
+
+#파드 생성
+kubectl run -it --rm netdebug --image=nicolaka/netshoot --restart=Never -- zsh
+
+
+
+netdebug  ~  nslookup -type=A google.com -debug | grep QUESTION -A1
+    QUESTIONS:
+        google.com.default.svc.cluster.local, type = A, class = IN
+--
+    QUESTIONS:
+        google.com.svc.cluster.local, type = A, class = IN
+--
+    QUESTIONS:
+        google.com.cluster.local, type = A, class = IN
+--
+    QUESTIONS:
+        google.com, type = A, class = IN
+
+
+
+
+
+#
+ps -ef | grep coredns
+
+
+
+tcpdump -i cali986308526d3 -nn udp port 53
+
+
+nslookup -type=A google.com. -debug | grep QUESTION -A1
+nslookup -type=A google.com -debug | grep QUESTION -A1
+
+
+

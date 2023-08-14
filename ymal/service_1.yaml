@@ -1,0 +1,20 @@
+# service_1.yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: deployment-service-1
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: service-nginx-pod
+  template:
+    metadata:
+      labels:
+        app: service-nginx-pod
+    spec:
+      containers:
+        - name: nginx
+          image: nginx:latest
+          ports:
+          - containerPort: 8080
