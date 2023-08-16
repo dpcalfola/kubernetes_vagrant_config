@@ -1,0 +1,30 @@
+# ingress2.yaml
+cat <<EOT> ingress2.yaml
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: ingress-2
+spec:
+  ingressClassName: nginx
+  rules:
+  - host: cloud.com
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: svc3-admin
+            port:
+              number: 8080
+  - host: "*.cloud.com"
+    http:
+      paths:
+      - path: /echo
+        pathType: Prefix
+        backend:
+          service:
+            name: svc3-admin
+            port:
+              number: 8080
+EOT

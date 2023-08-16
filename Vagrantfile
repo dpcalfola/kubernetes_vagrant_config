@@ -53,20 +53,20 @@ Vagrant.configure("2") do |config|
 
 
 #-----Client PC Subnet
-  config.vm.define "k8s-pc" do |subconfig|
-    subconfig.vm.box = BOX_IMAGE
-    subconfig.vm.box_version = BOX_VERSION
-    subconfig.vm.provider "virtualbox" do |v|
-      v.customize ["modifyvm", :id, "--groups", "/Ingress-Lab"]
-      v.name = "Ingress-k8s-pc"
-      v.memory = 512
-      v.cpus = 1
-      v.linked_clone = true
+    config.vm.define "k8s-pc" do |subconfig|
+      subconfig.vm.box = BOX_IMAGE
+      subconfig.vm.box_version = BOX_VERSION
+      subconfig.vm.provider "virtualbox" do |v|
+        v.customize ["modifyvm", :id, "--groups", "/Ingress-Lab"]
+        v.name = "Ingress-k8s-pc"
+        v.memory = 512
+        v.cpus = 1
+        v.linked_clone = true
+      end
+      subconfig.vm.hostname = "k8s-pc"
+      subconfig.vm.synced_folder "./", "/vagrant", disabled: true
+      subconfig.vm.network "private_network", ip: "192.168.10.150"
+      subconfig.vm.network "forwarded_port", guest: 22, host: 50150, auto_correct: true, id: "ssh"
+      subconfig.vm.provision "shell", path: "https://raw.githubusercontent.com/dpcalfola/kubernetes_vagrant_config/main/client_pc.sh", args: N
     end
-    subconfig.vm.hostname = "k8s-pc"
-    subconfig.vm.synced_folder "./", "/vagrant", disabled: true
-    subconfig.vm.network "private_network", ip: "192.168.10.150"
-    subconfig.vm.network "forwarded_port", guest: 22, host: 50150, auto_correct: true, id: "ssh"
-    subconfig.vm.provision "shell", path: "https://raw.githubusercontent.com/Beas-github/test/master/T2/client_pc.sh", args: N
-  end
 end

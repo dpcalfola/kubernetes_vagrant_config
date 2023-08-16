@@ -1,0 +1,19 @@
+# deployment.yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: ingress-deploy-1
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: ingress-nginx-pods
+  template:
+    metadata:
+      name: ingress-nginx-pod
+      labels:
+        app: ingress-nginx-pods
+    spec:
+      containers:
+        - name: nginx
+          image: nginx:latest

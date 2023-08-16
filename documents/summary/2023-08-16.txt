@@ -1,0 +1,195 @@
+< Ingress - 2023-08-16 >
+
+* 실습 yaml
+https://github.com/dpcalfola/kubernetes_vagrant_config/yaml
+
+Concept:
+    1. Ingress
+    2. 모니터링
+    3. Nginx Ingress Controller 설정
+    4. ingress 의 로드벨런싱 역할 확인
+    5. Host: ip가 아닌 domain 으로만 접근 가능하도록 설정
+
+
+
+
+
+1. Ingress:
+    - 클러스터 외부에서 내부로 접근하는 요청을 어떻게 처리할지 정의하는 규칙들의 모음
+    - Add-on 형식으로 적용
+    - 실습에서는 Nginx Ingress Controller 사용
+
+
+
+
+2. 모니터링
+    watch kubectl get all -n ingress-nginx
+    watch -d 'kubectl get ingress,svc,ep;echo; calicoctl get wep'
+    kubetail -f
+
+
+
+
+3. Nginx Ingress Controller 설정
+    - Docs
+        https://kubernetes.github.io/ingress-nginx
+
+    - 환경구성: Bare metal clusters
+        https://kubernetes.github.io/ingress-nginx/deploy/#bare-metal-clusters
+
+    - 컨트롤러 구성 명령어
+        kubectl apply -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/controller-v1.8.1/deploy/static/provider/baremetal/deploy.yaml
+
+    - 컨트롤러 구성 확인
+        kubectl get all -n ingress-nginx
+        또는
+        k get namespace
+        -> ingress-nginx Active 확인
+
+    - http/https port 확인
+        k -n ingress-nginx get svc
+
+    - http/https port 변수에 담기
+        export IngHttp=$(kubectl get service -n ingress-nginx ingress-nginx-controller -o jsonpath='{.spec.ports[0].nodePort}')
+        export IngHttps=$(kubectl get service -n ingress-nginx ingress-nginx-controller -o jsonpath='{.spec.ports[1].nodePort}')
+
+
+
+
+4. ingress 의 로드벨런싱 역할 확인
+    - 적용 yaml
+    (repo root)/ymal/ingress/
+        svc1-pod.yaml
+        svc2-pod.yaml
+        svc3-pod.yaml
+        ingress1.yaml
+
+    - 각 pod의 Path 설정 (in ingress1.yaml)
+        svc1: /
+        svc2: /guest
+        svc3: /admin
+
+    - 테스트 pc에서 로드 벨런싱 동작 확인
+        for i in {1..100}; do curl -s k8s-m:$IngHttp/guest ; done | sort | uniq -c | sort -nr
+        curl -s k8s-m:$IngHttp/admin | egrep '(client_address|x-forwarded-for)'
+        for i in {1..100}; do curl -s k8s-m:$IngHttp/admin | grep Hostname ; done | sort | uniq -c | sort -nr
+        kubectl describe clusterrole ingress-nginx -n ingress-nginx | egrep '(Verbs|endpoints)'
+
+
+
+
+
+5. Host: ip가 아닌 domain 으로만 접근 가능하도록 설정
+    - 적용 yaml
+        (repo root)/ymal/ingress/
+            ingress2.yaml
+            svc3-pod.yaml
+
+
+    - spec.rules.host 에 domain 을 추가하여 Ingress 적용
+
+
+    - 테스트 PC에 hosts 파일에 domain 추가
+        (env)
+            MASTER=ctrl-plane ip
+            MYDOMAIN1=fola.com
+            MYDOMAIN2=test.fola.com
+
+        (도메인 추가)
+            cat << EOF >> /etc/hosts
+            $MASTER $MYDOMAIN1
+            $MASTER $MYDOMAIN2
+            EOF
+
+        (확인)
+            cat /etc/hosts
+
+
+    - 로드 밸런싱 확인
+        (Hostname 으로 필터링하여 어느 파드로 접속했는지 확인한다)
+        for i in {1..100};  do curl -s $MYDOMAIN1:$IngHttp | grep Hostname ; done | sort | uniq -c | sort -nr
+
+
+    - 결과 요약
+        domain 이 아닌 ip 로 접근할 시 404 에러 발생
+
+        (에코 서버 출력 분석)
+        curl -s fola.com:$IngHttp -> 출력갑 붙임 (``` ```)
+
+        1) Request Information.client_address
+            -> ingress-nginx-controller ip
+        2) Request Headers.x-forwarded-for
+            -> 테스트 pc ip
+        3) Request Headers.x-forwarded-host
+            -> fola.com:32383
+            -> curl 요청시 헤더에 Host: fola.com:32383 가 포함되어 있음
+            -> 이를 통해 도메인으로 접속하였는지 ip 로 접속하였는지 ngnix가 판단 가능
+            -> ip 로 접속할 경우 404 Raise
+
+        ```(shell: curl -s fola.com:$IngHttp)
+        Hostname: deploy3-adminsrv-779c9dc79b-ghbsc
+
+        Pod Information:
+                -no pod information available-
+
+        Server values:
+                server_version=nginx: 1.13.0 - lua: 10008
+
+        Request Information:
+                client_address=172.30.29.29
+                method=GET
+                real path=/
+                query=
+                request_version=1.1
+                request_uri=http://fola.com:8080/
+
+        Request Headers:
+                accept=*/*
+                host=fola.com:32383
+                user-agent=curl/7.81.0
+                x-forwarded-for=192.168.10.150
+                x-forwarded-host=fola.com:32383
+                x-forwarded-port=80
+                x-forwarded-proto=http
+                x-forwarded-scheme=http
+                x-real-ip=192.168.10.150
+                x-request-id=3b48a1b2fdcbffce02c95ab11697021c
+                x-scheme=http
+
+        Request Body:
+                -no body in request-
+        ```
+
+
+
+6. Canary update
+    - 적용 yaml
+        (repo root)/ymal/canary_update
+            canary-ingress1.yaml
+            canary-ingress2.yaml
+            canary-svc1-pod.yaml
+            canary-svc2-pod.yaml
+
+    - 구버전과 신버전 각각 ingress object를 만들고 그중 하나에 annotation을 추가하여 가중치 부여
+        (canary-ingress2.yaml, metadata.annotations)
+            annotations:
+                nginx.ingress.kubernetes.io/canary: "true"
+                nginx.ingress.kubernetes.io/canary-weight: "10"
+
+    - 가중치에 따른 로드밸런싱 확인
+        (MYDOMAIN3=fola2.com, /etc/hosts 에 추가)
+        for i in {1..100};  do curl -s $MYDOMAIN3:$IngHttp | grep nginx ; done | sort | uniq -c | sort -nr
+
+    - 가중치 비율 조정
+        kubectl get ingress ingress-canary-v2 -o yaml | sed -e "s/weight: \"10\"/weight: \"50\"/" | kubectl apply -f -
+
+
+
+7. (참고) 5,6 번 실습시 ingress-nginx-controller pod 의 nginx.conf 파일 확인
+    - 파드 접근
+        k exec -it  -n ingress-nginx ingress-nginx-controller-5c778bffff-j7r2r -- bash
+    - nginx.conf 파일 확인
+        cat /etc/nginx/nginx.conf
+
+    - 결과
+            

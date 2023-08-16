@@ -1,0 +1,114 @@
+# Monitoring
+
+    watch kubectl get all -n ingress-nginx
+    watch -d 'kubectl get ingress,svc,ep;echo; calicoctl get wep'
+
+
+
+# nginx ingress docs
+    https://kubernetes.github.io/ingress-nginx/deploy/#bare-metal-clusters
+
+    bare-metal-clusters 사용
+
+
+
+# check up namespace
+    k get namespace
+
+    (Result)
+        ingress-nginx Active 가 새로 생성되어 있음
+
+
+# ingress http/https port checkup
+k -n ingress-nginx get svc
+
+
+
+# set variable (http/https)
+export IngHttp=$(kubectl get service -n ingress-nginx ingress-nginx-controller -o jsonpath='{.spec.ports[0].nodePort}')
+export IngHttps=$(kubectl get service -n ingress-nginx ingress-nginx-controller -o jsonpath='{.spec.ports[1].nodePort}')
+
+
+
+
+
+
+
+
+# 반복문
+for i in (1..100); do curl -s k8s
+
+#확인
+for i in {1..100}; do curl -s k8s-m:$IngHttp/guest ; done | sort | uniq -c | sort -nr
+curl -s k8s-m:$IngHttp/admin | egrep '(client_address|x-forwarded-for)'
+for i in {1..100}; do curl -s k8s-m:$IngHttp/admin | grep Hostname ; done | sort | uniq -c | sort -nr
+kubectl describe clusterrole ingress-nginx -n ingress-nginx | egrep '(Verbs|endpoints)'
+
+
+
+
+
+# 변수를 이용하여 yaml 파일 내용 치환
+sed -i "s/cloud.com/$MYDOMAIN/g" ingress2.yaml
+
+
+
+# DNS Host 설정
+cat << EOF >> /etc/hosts
+$MASTER $MYDOMAIN1
+$MASTER $MYDOMAIN2
+EOF
+
+cat << EOF >> /etc/hosts
+$MASTER $MYDOMAIN3
+$MASTER $MYDOMAIN4
+EOF
+
+
+
+# log 확인
+kubetail -f
+
+
+
+# 로드 밸런싱 확인 (host)
+(MYDOMAIN1=fola.com)
+- Hostname 으로 필터링하여 어느 파드로 접속했는지 확인
+for i in {1..100};  do curl -s $MYDOMAIN1:$IngHttp | grep Hostname ; done | sort | uniq -c | sort -nr
+
+
+# 로드 밸런싱 확인 (canary update)
+(MYDOMAIN3=fola2.com)
+for i in {1..100};  do curl -s $MYDOMAIN3:$IngHttp | grep nginx ; done | sort | uniq -c | sort -nr
+
+(비율조정)
+kubectl get ingress ingress-canary-v2 -o yaml | sed -e "s/weight: \"10\"/weight: \"50\"/" | kubectl apply -f -
+
+
+
+
+# 확인
+for i in {1..100};  do curl -s $MYDOMAIN1:$IngHttp | grep nginx ; done | sort | uniq -c | sort -nr
+while true; do curl -s --connect-timeout 1 $MYDOMAIN1:$IngHttp | grep Hostname ; echo "--------------" ; date "+%Y-%m-%d %H:%M:%S" ; sleep 1; done
+
+#비율조정
+kubectl get ingress ingress-canary-v2 -o yaml | sed -e "s/weight: \"10\"/weight: \"50\"/" | kubectl apply -f -
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+# Mission
+같은 실습을 helm 방식으로 구현하는게 미션

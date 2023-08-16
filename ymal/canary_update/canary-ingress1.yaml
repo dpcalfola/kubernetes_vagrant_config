@@ -1,0 +1,18 @@
+# canary-ingress1.yaml
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: ingress-canary-v1
+spec:
+  ingressClassName: nginx
+  rules:
+    - host: fola2.com
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: svc-v1
+                port:
+                  number: 8080
