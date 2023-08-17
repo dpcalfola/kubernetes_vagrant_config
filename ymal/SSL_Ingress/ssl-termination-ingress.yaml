@@ -1,0 +1,22 @@
+# ssl-termination-ingress.yaml
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: https
+spec:
+  ingressClassName: nginx
+  tls:
+    - hosts:
+        - cloud.com
+      secretName: secret-https
+  rules:
+    - host: cloud.com
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: svc-https
+                port:
+                  number: 8080

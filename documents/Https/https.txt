@@ -1,0 +1,37 @@
+
+# 치환
+    sed -i "s/cloud.com/$MYDOMAIN1/g" ssl-termination-ingress.yaml
+
+# ingress apply
+    k apply -f ssl-termination-ingress.yaml
+
+
+
+# Generate Key
+    openssl req -x509 -nodes -days 365 -newkey rsa:2048 -keyout tls.key -out tls.crt -subj "/CN=$MYDOMAIN1/O=$MYDOMAIN1"
+
+
+
+# set variable (http/https)
+export IngHttp=$(kubectl get service -n ingress-nginx ingress-nginx-controller -o jsonpath='{.spec.ports[0].nodePort}')
+export IngHttps=$(kubectl get service -n ingress-nginx ingress-nginx-controller -o jsonpath='{.spec.ports[1].nodePort}')
+
+
+
+
+# Create Secret
+    k create secret tls secret-https --key tls.key --cert tls.crt
+
+    (확인)
+    k get secrets
+
+
+
+# Https curl 접속
+curl -Lk https://$MYDOMAIN1:$IngHttps
+
+#
+tcpdump -i enp0s8 -nnq tcp port 80 or tcp port 443 or tcp port 8080 or tcp port $IngHttp or tcp port $IngHttps
+
+tcpdump -i enp0s8 -nnq tcp port 80 or tcp port 443 or tcp port 8080 or tcp port $IngHttp or tcp port $IngHttps -w ingress.pcap
+
